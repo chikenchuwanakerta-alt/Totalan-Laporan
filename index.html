@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#ff5c98">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Totalan Laporan</title>
+<link rel="manifest" href="./manifest.json">
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#fff4f8;color:#40233a}
+button,input{font:inherit}
+.app{max-width:520px;margin:auto;min-height:100vh;padding-bottom:90px}
+header{padding:24px 20px 14px;display:flex;justify-content:space-between;align-items:center}
+.brand h1{margin:0;font-size:25px;color:#7e2858}
+.brand p{margin:5px 0 0;color:#9b718b;font-size:13px}
+.logo{width:48px;height:48px;border-radius:50%;background:linear-gradient(145deg,#ff8fba,#ff4f91);display:grid;place-items:center;color:#fff;font-size:24px;box-shadow:0 8px 20px #ff78aa55}
+.summary{margin:10px 18px 18px;padding:22px;border-radius:25px;background:linear-gradient(135deg,#ff72a8,#e94183);color:#fff;box-shadow:0 12px 28px #ff5c9840}
+.summary small{opacity:.9}.summary .total{font-size:30px;font-weight:800;margin:8px 0}.summary .count{font-size:13px;opacity:.95}
+.search{margin:0 18px 16px;background:#fff;border:1px solid #f5d7e5;border-radius:18px;padding:13px 15px;display:flex;gap:9px}
+.search input{border:0;outline:0;width:100%;background:transparent;color:#40233a}
+.section-title{padding:0 20px 10px;font-weight:800}
+.customer{margin:10px 18px;padding:16px;border-radius:20px;background:#fff;box-shadow:0 6px 18px #b56d9020;display:flex;align-items:center;gap:12px}
+.avatar{width:45px;height:45px;border-radius:50%;background:#ffe0ec;display:grid;place-items:center;font-size:21px;flex:none}
+.customer-main{flex:1;min-width:0}.customer-name{font-weight:800}.customer-sub{font-size:12px;color:#9a748b;margin-top:4px}.customer-total{text-align:right;font-weight:800;color:#e84486;font-size:15px}
+.total-btn{margin-top:7px;border:0;background:#ff76a9;color:#fff;padding:7px 12px;border-radius:12px;font-size:12px}
+.empty{text-align:center;padding:50px 25px;color:#a47d91}
+.fab{position:fixed;right:calc(50% - 245px);bottom:20px;width:62px;height:62px;border-radius:50%;border:0;background:#ff5c98;color:#fff;font-size:30px;box-shadow:0 12px 28px #ff5c9855}
+@media(max-width:520px){.fab{right:20px}}
+.modal{position:fixed;inset:0;background:#32152c66;display:none;align-items:flex-end;justify-content:center;z-index:5}
+.modal.show{display:flex}
+.sheet{width:min(520px,100%);background:#fff8fb;border-radius:28px 28px 0 0;padding:22px 20px 28px;max-height:88vh;overflow:auto}
+.sheet h2{margin:0 0 18px}.field{margin:12px 0}.field label{display:block;font-size:13px;font-weight:700;margin-bottom:7px}.field input{width:100%;padding:14px;border:1px solid #efcddd;border-radius:15px;outline:0;background:#fff}
+.primary{width:100%;border:0;border-radius:15px;padding:14px;background:#ff5c98;color:#fff;font-weight:800;margin-top:8px}
+.secondary{width:100%;border:0;border-radius:15px;padding:12px;background:#ffe2ed;color:#a52d61;margin-top:8px}
+.detail-row{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f2dce7;font-size:14px}
+.detail-total{font-size:22px;font-weight:800;color:#e84486;text-align:right;margin-top:15px}
+.toast{position:fixed;left:50%;bottom:95px;transform:translateX(-50%);background:#40233a;color:#fff;padding:11px 16px;border-radius:14px;display:none;z-index:10;font-size:13px}
+nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(520px,100%);height:70px;background:#fff;border-top:1px solid #f2d8e5;display:flex;justify-content:space-around;align-items:center;z-index:4}
+nav span{font-size:11px;color:#9b718b;text-align:center}nav b{display:block;font-size:21px;color:#ff5c98}
+</style>
+</head>
+<body>
+<div class="app">
+<header><div class="brand"><h1>💕 Totalan Laporan</h1><p>Catatan pemasukan kamu</p></div><div class="logo">♡</div></header>
+<section class="summary"><small>TOTAL PEMASUKAN ✨</small><div class="total" id="grandTotal">Rp 0</div><div class="count" id="paymentCount">0 pembayaran</div></section>
+<div class="search">🔎 <input id="search" placeholder="Cari nama pelanggan..." oninput="render()"></div>
+<div class="section-title">Daftar Pelanggan 💗</div>
+<div id="customers"></div>
+</div>
+
+<button class="fab" onclick="openAdd()">＋</button>
+<nav><span><b>⌂</b>Beranda</span><span><b>▤</b>Transaksi</span><span><b>♡</b>Laporan</span><span><b>⚙</b>Pengaturan</span></nav>
+
+<div class="modal" id="addModal"><div class="sheet">
+<h2>Tambah Pembayaran 🌸</h2>
+<div class="field"><label>Nama Pelanggan</label><input id="name" placeholder="Masukkan nama pelanggan"></div>
+<div class="field"><label>Nominal Pembayaran</label><input id="amount" type="number" inputmode="numeric" placeholder="Contoh: 50000"></div>
+<button class="primary" onclick="addPayment()">♥ Tambahkan Pembayaran</button>
+<button class="secondary" onclick="closeModal()">Batal</button>
+</div></div>
+
+<div class="modal" id="detailModal"><div class="sheet">
+<h2 id="detailTitle">Detail Pelanggan</h2>
+<div id="detailRows"></div><div class="detail-total" id="detailTotal"></div>
+<button class="primary" onclick="closeModal()">Tutup</button>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const KEY="totalan_laporan_v1";
+let data=JSON.parse(localStorage.getItem(KEY)||"[]");
+
+function rupiah(n){return new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(n)}
+function save(){localStorage.setItem(KEY,JSON.stringify(data))}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+function grouped(){
+ const map={};
+ data.forEach(x=>{let k=x.name.trim(); if(!map[k])map[k]=[]; map[k].push(x)});
+ return map;
+}
+function render(){
+ const q=document.getElementById("search").value.toLowerCase().trim();
+ const map=grouped(), box=document.getElementById("customers");
+ let total=data.reduce((a,x)=>a+x.amount,0);
+ document.getElementById("grandTotal").textContent=rupiah(total);
+ document.getElementById("paymentCount").textContent=data.length+" pembayaran";
+ box.innerHTML="";
+ let names=Object.keys(map).filter(n=>n.toLowerCase().includes(q));
+ if(!names.length){box.innerHTML='<div class="empty">Belum ada data pelanggan.<br>Tekan tombol ＋ untuk menambahkan pembayaran 💕</div>';return}
+ names.forEach(name=>{
+   const arr=map[name], sum=arr.reduce((a,x)=>a+x.amount,0);
+   const d=document.createElement("div"); d.className="customer";
+   d.innerHTML=`<div class="avatar">👩🏻</div><div class="customer-main"><div class="customer-name">${esc(name)}</div><div class="customer-sub">${arr.length} pembayaran</div></div><div class="customer-total">${rupiah(sum)}<br><button class="total-btn" onclick="showDetail('${encodeURIComponent(name)}')">Totalan →</button></div>`;
+   box.appendChild(d);
+ });
+}
+function openAdd(){document.getElementById("addModal").classList.add("show");document.getElementById("name").focus()}
+function closeModal(){document.querySelectorAll(".modal").forEach(x=>x.classList.remove("show"))}
+function addPayment(){
+ const name=document.getElementById("name").value.trim(), amount=Number(document.getElementById("amount").value);
+ if(!name){toast("Nama pelanggan belum diisi");return}
+ if(!amount||amount<1){toast("Nominal belum diisi");return}
+ data.push({name,amount,date:new Date().toISOString()});save();
+ document.getElementById("name").value="";document.getElementById("amount").value="";
+ closeModal();render();toast("Pembayaran berhasil ditambahkan 💕");
+}
+function showDetail(encoded){
+ const name=decodeURIComponent(encoded), arr=grouped()[name]||[];
+ document.getElementById("detailTitle").textContent=name+" 💗";
+ document.getElementById("detailRows").innerHTML=arr.map((x,i)=>`<div class="detail-row"><span>Pembayaran ${i+1}<br><small>${new Date(x.date).toLocaleString("id-ID")}</small></span><b>${rupiah(x.amount)}</b></div>`).join("");
+ document.getElementById("detailTotal").textContent="Total: "+rupiah(arr.reduce((a,x)=>a+x.amount,0));
+ document.getElementById("detailModal").classList.add("show");
+}
+function toast(t){const x=document.getElementById("toast");x.textContent=t;x.style.display="block";clearTimeout(window.tt);window.tt=setTimeout(()=>x.style.display="none",2200)}
+render();
+if("serviceWorker" in navigator) addEventListener("load",()=>navigator.serviceWorker.register("./sw.js"));
+</script>
+</body>
+</html>
